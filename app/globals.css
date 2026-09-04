@@ -1,26 +1,148 @@
 @import "tailwindcss";
 
+@theme {
+  --font-serif: var(--font-playfair), "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-plus-jakarta), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-abyss: #0c0a09;
+  --color-surface: #151312;
+  --color-surface-dim: #151312;
+  --color-surface-bright: #3c3837;
+  --color-surface-elevation: #1c1917;
+  --color-surface-container: #221f1e;
+  --color-surface-high: #2c2928;
+  --color-surface-highest: #373433;
+  --color-surface-border: #292524;
+
+  --color-primary: #ffb690;
+  --color-primary-container: #f97316;
+  --color-flame: #f97316;
+  --color-flame-warm: #fb923c;
+  --color-flame-deep: #ea580c;
+
+  --color-tertiary: #f7be1d;
+  --color-gold-prana: #facc15;
+  --color-gold-soft: #fef08a;
+  --color-gold-amber: #eab308;
+
+  --color-secondary: #ffb3ad;
+  --color-sindoor: #ef4444;
+  --color-sindoor-deep: #dc2626;
+
+  --color-cream: #fafaf9;
+  --color-sand: #a8a29e;
+  --color-hearth: #78716c;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0c0a09;
+  --foreground: #fafaf9;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #0c0a09;
+  color: #fafaf9;
+  font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+.font-body {
+  font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Diya Radial Glows */
+.diya-halo {
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.28) 0%, rgba(234, 179, 8, 0.14) 40%, rgba(12, 10, 9, 0) 72%);
+}
+
+.diya-altar-glow {
+  box-shadow: 0 0 45px -5px rgba(249, 115, 22, 0.22), 0 0 20px -3px rgba(234, 179, 8, 0.15);
+}
+
+.flame-cta-glow {
+  box-shadow: 0 0 25px rgba(249, 115, 22, 0.38), 0 0 10px rgba(251, 146, 60, 0.25);
+}
+
+.flame-cta-glow:hover {
+  box-shadow: 0 0 35px rgba(249, 115, 22, 0.55), 0 0 18px rgba(251, 146, 60, 0.35);
+}
+
+.card-ambient-light {
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(249, 115, 22, 0.07) 0%, transparent 65%);
+}
+
+.card-ambient-subtle {
+  background-image: radial-gradient(ellipse at 80% 0%, rgba(250, 204, 21, 0.05) 0%, transparent 70%);
+}
+
+/* Animations */
+@keyframes flameBreathing {
+  0%, 100% {
+    transform: scale(1) translateY(0) rotate(-0.5deg);
+    opacity: 0.96;
+    filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.7));
+  }
+  50% {
+    transform: scale(1.05, 1.08) translateY(-2px) rotate(0.8deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 18px rgba(250, 204, 21, 0.9));
+  }
+}
+
+@keyframes flameAura {
+  0%, 100% {
+    transform: scale(0.98);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.85;
+  }
+}
+
+@keyframes diyaPulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.animate-flame {
+  animation: flameBreathing 3.5s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+
+.animate-flame-aura {
+  animation: flameAura 4s ease-in-out infinite alternate;
+}
+
+.animate-diya-pulse {
+  animation: diyaPulseRing 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0c0a09;
+}
+::-webkit-scrollbar-thumb {
+  background: #292524;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f97316;
 }

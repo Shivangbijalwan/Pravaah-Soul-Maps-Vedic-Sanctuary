@@ -1,0 +1,10 @@
+export * from "./DiyaFlame";
+export * from "./Navbar";
+export { default as HomeNavbar } from "./HomeNavbar";
+export * from "./HeroSection";
+export * from "./AboutSection";
+export * from "./ProcessSection";
+export * from "./Footer";
+export * from "./BirthCoordinatesModal";
+export { default as BirthDetailsForm } from "./BirthDetailsForm";
+export { default as InfiniteHoroscopeCarousel } from "./InfiniteHoroscopeCarousel";
