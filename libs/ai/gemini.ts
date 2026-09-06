@@ -38,7 +38,9 @@ export async function callGeminiForReading(systemPrompt: string, userPrompt: str
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`Gemini API error (${res.status}): ${errText}`);
+    const error = new Error(`Gemini API error (${res.status}): ${errText}`) as Error & { status?: number };
+    error.status = res.status;
+    throw error;
   }
 
   const data = await res.json();

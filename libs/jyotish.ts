@@ -146,6 +146,9 @@ export async function calculateJyotish(
   // Load ephemeris only when a reading is generated. This avoids executing
   // its CommonJS backend initializer while Next.js collects route config.
   const ephemeris = await import("ephemeris");
+  // Force the built-in pure-JS backend. Optional Swiss Ephemeris bindings can
+  // be present as an empty webpack stub and then fail on SEFLG_MOSEPH.
+  ephemeris.use("moshier");
   const ayanamsa = lahiriAyanamsa(utcDate);
 
   const raw = ephemeris.getAllPlanets(utcDate, longitude, latitude, 0);

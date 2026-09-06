@@ -1,13 +1,12 @@
 ﻿"use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Sparkles, ArrowRight, Star, ChevronDown } from "lucide-react";
-import DiyaFlame from "./DiyaFlame";
-import { SignInButton, Show } from "@clerk/nextjs";
+import { Sparkles, ArrowRight, ChevronDown } from "lucide-react";
+import { Show, SignInButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 interface HeroSectionProps {
-  onBeginJourney: () => void;
+  onBeginJourney?: () => void;
   onSeeHowItWorks: () => void;
 }
 
@@ -29,12 +28,11 @@ const ZODIACS = [
 
 export function HeroSection({ onBeginJourney, onSeeHowItWorks }: HeroSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const orb1Ref = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const mountFrame = requestAnimationFrame(() => setMounted(true));
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
@@ -44,7 +42,10 @@ export function HeroSection({ onBeginJourney, onSeeHowItWorks }: HeroSectionProp
       });
     };
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    return () => {
+      cancelAnimationFrame(mountFrame);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, []);
 
   const parallaxX = (mousePos.x - 0.5) * 30;
@@ -181,6 +182,29 @@ export function HeroSection({ onBeginJourney, onSeeHowItWorks }: HeroSectionProp
         >
           Enter your birth coordinates and receive a deeply personal Vedic blueprint — your personality, cosmic rhythms, and life journey revealed with mathematical precision.
         </p>
+
+        <Show when="signed-out">
+          <SignInButton mode="modal" fallbackRedirectUrl="/home">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full bg-[#F97316] px-7 py-3.5 text-sm font-semibold text-[#0C0A09] transition hover:bg-[#FB923C]"
+            >
+              Discover Your Reading
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </SignInButton>
+        </Show>
+
+        <Show when="signed-in">
+          <Link
+            href="/home"
+            onClick={onBeginJourney}
+            className="inline-flex items-center gap-2 rounded-full bg-[#F97316] px-7 py-3.5 text-sm font-semibold text-[#0C0A09] transition hover:bg-[#FB923C]"
+          >
+            Discover Your Reading
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Show>
 
         {/* Trust badges */}
         <div

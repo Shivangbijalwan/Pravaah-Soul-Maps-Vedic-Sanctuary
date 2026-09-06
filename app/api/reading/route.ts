@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { generateFullReading } from "../../../libs/generateFullReading";
+import { AIQuotaError } from "../../../libs/ai/callAIForReading";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -25,6 +26,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err: unknown) {
     console.error("Reading generation failed:", err);
+    if (err instanceof AIQuotaError) {
+      return NextResponse.json(
+        { error: err.message, code: "AI_PROVIDER_UNAVAILABLE" },
+        { status: 503 }
+      );
+    }
     const message = err instanceof Error ? err.message : "Something went wrong.";
     return NextResponse.json({ error: message }, { status: 500 });
   }

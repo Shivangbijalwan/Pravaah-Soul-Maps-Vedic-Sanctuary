@@ -1,8 +1,5 @@
 ﻿"use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
 import {
   AboutSection,
   Footer,
@@ -12,41 +9,9 @@ import {
   ReadingPreviewSection,
   TestimonialsSection,
   InfiniteHoroscopeCarousel,
-  BirthCoordinatesModal,
 } from "../components";
 
 export default function Home() {
-  const router = useRouter();
-  const [isBirthModalOpen, setIsBirthModalOpen] = useState(false);
-
-  const openReadingForm = () => setIsBirthModalOpen(true);
-
-  const submitReading = async (data: {
-    fullName: string;
-    birthDate: string;
-    birthTime: string;
-    birthPlace: string;
-  }) => {
-    const response = await fetch("/api/reading", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: data.fullName,
-        dob: data.birthDate,
-        time: data.birthTime,
-        place: data.birthPlace,
-      }),
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(result.error || "Unable to generate your reading.");
-    }
-
-    sessionStorage.setItem("latestReading", JSON.stringify(result));
-    router.push("/discover");
-  };
-
   const scrollToProcess = () => {
     document
       .getElementById("journey-process")
@@ -60,7 +25,6 @@ export default function Home() {
       <main>
         {/* Hero — full viewport */}
         <HeroSection
-          onBeginJourney={openReadingForm}
           onSeeHowItWorks={scrollToProcess}
         />
 
@@ -87,13 +51,7 @@ export default function Home() {
         <TestimonialsSection />
       </main>
 
-      <Footer onOpenBirthModal={openReadingForm} />
-
-      <BirthCoordinatesModal
-        isOpen={isBirthModalOpen}
-        onClose={() => setIsBirthModalOpen(false)}
-        onSubmitCoordinates={submitReading}
-      />
+      <Footer />
     </div>
   );
 }
