@@ -11,7 +11,7 @@ interface BirthCoordinatesModalProps {
     birthDate: string;
     birthTime: string;
     birthPlace: string;
-  }) => void;
+  }) => Promise<void>;
 }
 
 export function BirthCoordinatesModal({
@@ -24,17 +24,20 @@ export function BirthCoordinatesModal({
   const [birthTime, setBirthTime] = useState("06:45");
   const [birthPlace, setBirthPlace] = useState("Varanasi, India");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      onSubmitCoordinates({ fullName, birthDate, birthTime, birthPlace });
-      onClose();
-    }, 600);
+    setError(null);
+    void onSubmitCoordinates({ fullName, birthDate, birthTime, birthPlace })
+      .then(onClose)
+      .catch((submitError: unknown) => {
+        setError(submitError instanceof Error ? submitError.message : "Unable to generate your reading.");
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   return (
@@ -70,6 +73,12 @@ export function BirthCoordinatesModal({
         <p className="text-xs text-[#A8A29E] mb-6 leading-relaxed">
           Precise astronomical alignment enables accurate synthesis of foundational temperaments and cyclical rhythms.
         </p>
+
+        {error && (
+          <p role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
+            {error}
+          </p>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
