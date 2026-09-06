@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.1",
+    "@vercel/analytics": "^2.0.1",
     "ephemeris": "^3.2.1",
     "geo-tz": "^8.1.8",
     "lucide-react": "^1.40.0",
