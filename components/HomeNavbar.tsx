@@ -43,11 +43,11 @@ export default function HomeNavbar() {
             className="flex items-center gap-2 rounded-full border border-stone-700/70 bg-stone-900/70 p-1.5 pr-3 transition hover:border-orange-500/60"
           >
             {user?.imageUrl ? (
-              <img
-                src={user.imageUrl}
-                alt=""
-                className="h-8 w-8 rounded-full object-cover"
-              />
+                <span
+                  aria-hidden="true"
+                  className="h-8 w-8 rounded-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${user.imageUrl})` }}
+                />
             ) : (
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-stone-950">
                 {initials}

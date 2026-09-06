@@ -562,11 +562,12 @@ export default function InfiniteHoroscopeCarousel() {
     }
 
     updatePositions();
-    setReady(true);
+    const readyTimer = window.setTimeout(() => setReady(true), 0);
     rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      window.clearTimeout(readyTimer);
       if (ro) ro.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

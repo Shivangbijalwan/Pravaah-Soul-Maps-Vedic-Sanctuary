@@ -1,44 +1,239 @@
-"use client";
+﻿"use client";
 
-import React from "react";
-import { ArrowRight, Flame, Map, Lock, Scale, Sparkles } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Sparkles, ArrowRight, ChevronDown } from "lucide-react";
+import { Show, SignInButton } from "@clerk/nextjs";
+import Link from "next/link";
 
 interface HeroSectionProps {
-  onBeginJourney: () => void;
+  onBeginJourney?: () => void;
   onSeeHowItWorks: () => void;
 }
 
-export function HeroSection({ onBeginJourney, onSeeHowItWorks }: HeroSectionProps) {
-  return (
-    <section id="home" className="relative w-full pt-10 pb-16 sm:pt-14 sm:pb-24 flex flex-col items-center justify-center text-center px-4 overflow-hidden">
-      {/* Background ambient radial glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[700px] h-[550px] sm:h-[700px] bg-[radial-gradient(circle,rgba(249,115,22,0.14)_0%,rgba(234,179,8,0.06)_40%,transparent_70%)] pointer-events-none -z-10" />
+const STARS = Array.from({ length: 60 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+  size: Math.random() * 2 + 0.5,
+  duration: Math.random() * 4 + 2,
+  delay: Math.random() * 5,
+  opacity: Math.random() * 0.7 + 0.3,
+}));
 
-      {/* 1. Category Tag Chip */}
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1C1917]/90 border border-[#292524] shadow-sm mb-6 sm:mb-8 backdrop-blur-sm">
-        <Sparkles className="w-3.5 h-3.5 text-[#FACC15]" />
-        <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.14em] text-[#E8E1DF]">
-          Personal Insight & Guidance
-        </span>
+const ZODIACS = [
+  "♈ Aries", "♉ Taurus", "♊ Gemini", "♋ Cancer",
+  "♌ Leo", "♍ Virgo", "♎ Libra", "♏ Scorpio",
+  "♐ Sagittarius", "♑ Capricorn", "♒ Aquarius", "♓ Pisces",
+];
+
+export function HeroSection({ onBeginJourney, onSeeHowItWorks }: HeroSectionProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const mountFrame = requestAnimationFrame(() => setMounted(true));
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setMousePos({
+        x: (e.clientX - rect.left) / rect.width,
+        y: (e.clientY - rect.top) / rect.height,
+      });
+    };
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => {
+      cancelAnimationFrame(mountFrame);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
+  const parallaxX = (mousePos.x - 0.5) * 30;
+  const parallaxY = (mousePos.y - 0.5) * 20;
+
+  return (
+    <section
+      id="home"
+      ref={containerRef}
+      className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden"
+    >
+      {/* ── Starfield ── */}
+      <div className="absolute inset-0 pointer-events-none">
+        {mounted && STARS.map((star) => (
+          <div
+            key={star.id}
+            className="absolute rounded-full bg-[#FAFAF9] animate-twinkle"
+            style={{
+              left: `${star.x}%`,
+              top: `${star.y}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              opacity: star.opacity,
+              "--duration": `${star.duration}s`,
+              "--delay": `${star.delay}s`,
+            } as React.CSSProperties}
+          />
+        ))}
       </div>
 
-      {/* 2. Main Title */}
-      <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-medium tracking-tight text-[#FAFAF9] max-w-2xl leading-[1.18] sm:leading-[1.15]">
-        Discover What Makes You,{" "}
-        <span className="italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-[#F97316] via-[#FACC15] to-[#FEF08A]">
-          You.
-        </span>
-      </h1>
+      {/* ── Ambient orbs (parallax) ── */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: "15%",
+          left: "10%",
+          transform: `translate(${parallaxX * 1.2}px, ${parallaxY * 0.8}px)`,
+          transition: "transform 0.3s ease-out",
+        }}
+      >
+        <div className="w-[500px] h-[500px] rounded-full opacity-[0.12] blur-[80px] bg-[#F97316]" />
+      </div>
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: "10%",
+          right: "5%",
+          transform: `translate(${-parallaxX * 0.8}px, ${-parallaxY * 0.6}px)`,
+          transition: "transform 0.3s ease-out",
+        }}
+      >
+        <div className="w-[400px] h-[400px] rounded-full opacity-[0.09] blur-[70px] bg-[#FACC15]" />
+      </div>
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: "40%",
+          right: "20%",
+          transform: `translate(${-parallaxX * 0.5}px, ${parallaxY * 0.4}px)`,
+          transition: "transform 0.3s ease-out",
+        }}
+      >
+        <div className="w-[300px] h-[300px] rounded-full opacity-[0.07] blur-[60px] bg-[#EF4444]" />
+      </div>
 
-      {/* 3. Subtitle */}
-      <p className="mt-5 text-sm sm:text-base text-[#A8A29E] max-w-md sm:max-w-xl leading-relaxed font-normal">
-        Enter your birth details and uncover a personalized perspective on your personality, tendencies, strengths, and personal journey.
-      </p>
+      {/* ── Rotating zodiac ring ── */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          width: "700px",
+          height: "700px",
+          top: "50%",
+          left: "50%",
+          transform: `translate(-50%, -50%) translate(${parallaxX * 0.3}px, ${parallaxY * 0.2}px)`,
+          transition: "transform 0.6s ease-out",
+        }}
+      >
+        <div className="w-full h-full rounded-full border border-[#292524]/40 animate-spin-slow relative">
+          {ZODIACS.map((zodiac, i) => {
+            const angle = (i / ZODIACS.length) * 360;
+            const rad = (angle * Math.PI) / 180;
+            const r = 48;
+            const x = 50 + r * Math.sin(rad);
+            const y = 50 - r * Math.cos(rad);
+            return (
+              <span
+                key={zodiac}
+                className="absolute text-[9px] text-[#78716C]/50 font-mono"
+                style={{
+                  left: `${x}%`,
+                  top: `${y}%`,
+                  transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+                }}
+              >
+                {zodiac.split(" ")[0]}
+              </span>
+            );
+          })}
+        </div>
+        <div className="absolute inset-8 rounded-full border border-[#292524]/20 animate-spin-reverse" />
+      </div>
 
-      
+      {/* ── Main content ── */}
+      <div className="relative z-10 flex flex-col items-center max-w-4xl mx-auto">
+
+        {/* Category pill */}
+        <div
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1C1917]/90 border border-[#F97316]/30 shadow-sm mb-8 backdrop-blur-sm transition-all duration-1000 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#FACC15]" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#E8E1DF]">
+            Vedic Soul Map · Personal Insight
+          </span>
+        </div>
+
+        {/* Headline */}
+        <h1
+          className={`font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-medium tracking-tight text-[#FAFAF9] leading-[1.1] mb-6 transition-all duration-1000 delay-100 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+        >
+          Know the{" "}
+          <span className=" font-normal text-gradient-flame">
+            Soul
+          </span>
+          <br />
+          Behind the{" "}
+          <span className=" font-normal text-gradient-gold">
+            Stars
+          </span>
+        </h1>
+
+        {/* Sub */}
+        <p
+          className={`text-base sm:text-lg text-[#A8A29E] max-w-lg leading-relaxed mb-10 transition-all duration-1000 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+        >
+          Enter your birth coordinates and receive a deeply personal Vedic blueprint — your personality, cosmic rhythms, and life journey revealed with mathematical precision.
+        </p>
+
+        <Show when="signed-out">
+          <SignInButton mode="modal" fallbackRedirectUrl="/home">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full bg-[#F97316] px-7 py-3.5 text-sm font-semibold text-[#0C0A09] transition hover:bg-[#FB923C]"
+            >
+              Discover Your Reading
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </SignInButton>
+        </Show>
+
+        <Show when="signed-in">
+          <Link
+            href="/home"
+            onClick={onBeginJourney}
+            className="inline-flex items-center gap-2 rounded-full bg-[#F97316] px-7 py-3.5 text-sm font-semibold text-[#0C0A09] transition hover:bg-[#FB923C]"
+          >
+            Discover Your Reading
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Show>
+
+        {/* Trust badges */}
+        <div
+          className={`flex flex-wrap items-center justify-center gap-6 mt-12 transition-all duration-1000 delay-500 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
+          {[
+            { label: "Ancient Vedic Wisdom", icon: "✦" },
+            { label: "Mathematical Precision", icon: "◉" },
+            { label: "Private & Sacred", icon: "⊕" },
+          ].map((badge) => (
+            <div key={badge.label} className="flex items-center gap-2 text-[11px] text-[#78716C]">
+              <span className="text-[#F97316]/70 text-xs">{badge.icon}</span>
+              <span>{badge.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Scroll indicator ── */}
+      <button
+        type="button"
+        onClick={onSeeHowItWorks}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[#78716C] hover:text-[#F97316] transition-colors animate-float"
+      >
+        <span className="text-[10px] font-medium tracking-[0.2em] uppercase">Scroll</span>
+        <ChevronDown className="w-4 h-4" />
+      </button>
     </section>
   );
 }
 
 export default HeroSection;
-

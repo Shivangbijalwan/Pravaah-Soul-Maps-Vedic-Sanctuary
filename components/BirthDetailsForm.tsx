@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Calendar, Clock, MapPin, User } from "lucide-react";
 
 interface BirthDetails {
@@ -18,6 +19,8 @@ export default function BirthDetailsForm() {
     placeOfBirth: "",
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const update = (field: keyof BirthDetails, value: string) => {
     setDetails((current) => ({ ...current, [field]: value }));
@@ -25,8 +28,35 @@ export default function BirthDetailsForm() {
 
   const generateReading = async () => {
     setIsGenerating(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    setIsGenerating(false);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/reading", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: details.fullName,
+          dob: details.dateOfBirth,
+          time: details.timeOfBirth,
+          place: details.placeOfBirth,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to generate your reading.");
+      }
+
+      sessionStorage.setItem("latestReading", JSON.stringify(result));
+      router.replace("/discover");
+    } catch (submitError: unknown) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to generate your reading."
+      );
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -42,6 +72,12 @@ export default function BirthDetailsForm() {
           Add your birth details to prepare your personal celestial reading.
         </p>
       </div>
+
+      {error && (
+        <p role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+          {error}
+        </p>
+      )}
 
       <form
         onSubmit={(event) => {
