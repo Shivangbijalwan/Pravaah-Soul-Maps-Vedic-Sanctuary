@@ -1,579 +1,262 @@
-# 🌊 Pravaah
+# Pravaah — Numerology & Jyotish Soul Maps
 
-> **Your journey. Your insights. Your path forward.**
-
-Pravaah is a modern AI-powered personal insight platform that transforms user-provided personal information into a structured, personalized report.
-
-The platform is designed to provide users with meaningful insights through a clean, professional, and easy-to-use experience.
+A personal-insight web portal where a signed-in user enters their birth details (date, time, and place of birth) and receives a structured, personalized **Numerology + Jyotish (Vedic astrology)** reading — calculated deterministically in code and interpreted by an AI, never the other way around.
 
 ---
 
-## ✨ Features
+## Table of Contents
 
-### 🔐 Authentication
-
-* Secure user registration and login
-* User profiles
-* Logout functionality
-* Protected dashboard
-* Authentication with Clerk
-
-### 👤 Personal Information
-
-Users can securely provide relevant personal information through a simple multi-step form.
-
-The application validates the information before processing it.
-
-### 🤖 AI-Powered Insights
-
-Pravaah uses AI to generate personalized insights based on the information provided by the user.
-
-The AI produces a structured response rather than a generic chatbot conversation.
-
-Insights are organized into clear sections such as:
-
-* Personal Profile
-* Personality
-* Strengths
-* Challenges
-* Education
-* Career
-* Relationships
-* Personal Development
-* General Insights
-* Final Summary
-
-### 📊 Personalized Dashboard
-
-Users can:
-
-* View their profile
-* Create a new report
-* View previous reports
-* Open individual reports
-* Track their generated reports
-* Download reports as PDF
-
-### 📄 PDF Reports
-
-Users can generate professional PDF reports containing:
-
-* User information
-* Report details
-* Personalized insights
-* Generated date
-* Complete report
-* Disclaimer
-
-### 🔒 Privacy
-
-Pravaah is designed with privacy in mind.
-
-The application should:
-
-* Secure user information
-* Store only necessary data
-* Protect user reports
-* Keep API keys server-side
-* Allow users to delete their reports
-* Provide account deletion
-* Clearly explain how user data is handled
+- [How It Works](#how-it-works)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Data Flow](#data-flow)
+- [Getting Started (Local Development)](#getting-started-local-development)
+- [Environment Variables](#environment-variables)
+- [Deployment (Vercel)](#deployment-vercel)
+- [AI Provider Fallback](#ai-provider-fallback)
+- [Known Limitations](#known-limitations)
+- [Troubleshooting](#troubleshooting)
+- [Disclaimer](#disclaimer)
 
 ---
 
-## 🚀 User Flow
+## How It Works
 
-```text
-                 ┌─────────────────┐
-                 │   Landing Page  │
-                 └────────┬────────┘
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │ Login / Sign Up │
-                 └────────┬────────┘
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │    Dashboard    │
-                 └────────┬────────┘
-                          │
-                    New Report
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │ Personal Details│
-                 │      Form       │
-                 └────────┬────────┘
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │ Data Validation │
-                 └────────┬────────┘
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │   AI Engine     │
-                 └────────┬────────┘
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │ Structured      │
-                 │ Personalized    │
-                 │ Report          │
-                 └────────┬────────┘
-                          │
-                 ┌────────┴────────┐
-                 ▼                 ▼
-          ┌──────────────┐  ┌──────────────┐
-          │ Read Online  │  │ PDF Download │
-          └──────────────┘  └──────────────┘
+1. A user signs in via **Clerk**.
+2. They fill in a birth details form: full name, date of birth, time of birth, and place of birth.
+3. The app calculates their **numerology numbers** (mulank, bhagyank) and full **Jyotish chart** (ascendant, all 9 planets — rashi, nakshatra, pada) using deterministic code. No AI is involved in this step.
+4. Only the *calculated numbers* — never raw guesses — are sent to an AI model, which interprets them into a structured, readable report following a strict, fixed JSON schema.
+5. The AI's response is validated against that schema before being trusted. If it doesn't match, the app retries once automatically.
+6. The reading is shown on `/discover` in the same fixed layout for every user — only the content inside each section differs.
+
+The core rule this project is built around:
+
+```
+User data → Calculations (code) → Verified structured data → AI interpretation → Structured JSON → UI
+```
+
+**Never:** `User data → AI → "please calculate everything"`. Letting an AI do astronomical or numerological math invites wrong numbers. This app never does that.
+
+---
+
+## Tech Stack
+
+| Layer | Tool | Notes |
+|---|---|---|
+| Framework | Next.js (App Router, Turbopack) | Deployed on Vercel |
+| Styling | Tailwind CSS v4 | Dark, premium visual theme |
+| Auth | Clerk | Uses Clerk's current API (`Show`, `useAuth`, `useClerk`) — **not** the deprecated `SignedIn`/`SignedOut` components |
+| Numerology | Hand-written digit-reduction functions | No library needed, fully deterministic |
+| Jyotish | [`ephemeris`](https://www.npmjs.com/package/ephemeris) (pure JS, Moshier algorithm) | Tropical planetary longitudes converted to sidereal via a Lahiri ayanamsa approximation |
+| Geocoding | [Nominatim](https://nominatim.openstreetmap.org) (OpenStreetMap) | Free, no API key, place name → lat/lng |
+| Timezone | [`geo-tz`](https://www.npmjs.com/package/geo-tz) + [`luxon`](https://www.npmjs.com/package/luxon) | Resolves coordinates to an IANA timezone and converts local birth time to UTC, respecting historical DST rules |
+| AI (primary) | Google Gemini API (free tier) | Server-only, structured JSON output |
+| AI (fallback) | Groq API (free tier) | Automatically used if Gemini returns a 429 (quota) error |
+| Validation | [`zod`](https://www.npmjs.com/package/zod) | Validates every AI response against a strict schema before trusting it |
+
+Everything runs on free tiers — no paid services required to run this project end to end.
+
+---
+
+## Project Structure
+
+```
+app/
+  page.tsx                     Home/landing page — composes Navbar, Hero, About, etc.
+                                Has the "Discover Your Reading" button.
+  discover/
+    page.tsx                   Renders one FullReading in a fixed template,
+                                identical layout for every user.
+  api/
+    reading/
+      route.ts                 POST endpoint — the ONLY place the AI is called from.
+                                Requires a signed-in Clerk user.
+
+components/
+  Navbar.tsx                   Sticky header. Exports:
+                                - Navbar: nav links, responsive mobile menu,
+                                  Clerk auth buttons + profile dropdown
+                                - AuthShowcase: larger dedicated auth card
+                                  for the landing page body
+                                Both read Clerk auth state internally
+                                (no auth props needed from parent pages).
+
+lib/
+  numerology.ts                getMulank(), getBhagyank(), getNumerology()
+                                Pure digit-reduction math. No network calls.
+
+  geocode.ts                   geocodePlace() — place name → {lat, lng, displayName}
+                                via Nominatim.
+
+  timezone.ts                  getTimezoneName() — coordinates → IANA timezone.
+                                toUtcDate() — local birth date+time → correct UTC Date,
+                                accounting for historical DST via Luxon.
+
+  jyotish.ts                   calculateJyotish() — the Vedic astrology engine.
+                                Computes ascendant + all planets' sidereal
+                                longitude, rashi, nakshatra, and pada.
+
+  generateFullReading.ts       The orchestrator. Takes {name, dob, time, place},
+                                runs numerology + geocoding + timezone + jyotish,
+                                sends the results to the AI, validates the
+                                response, and returns one fixed-shape
+                                FullReading object.
+
+  ai/
+    promptSchema.ts            SYSTEM_PROMPT (AI's rules of engagement) and
+                                buildUserPrompt() (packages calculated data +
+                                required JSON shape for the AI).
+    gemini.ts                  Calls the Gemini API. Server-only.
+    groq.ts                    Calls the Groq API (fallback provider). Server-only.
+    callAIForReading.ts        Tries Gemini first, falls back to Groq automatically
+                                on a 429 quota error only.
+    readingSchema.ts           Zod schema the AI's JSON response must match.
+
+hooks/
+  useGenerateReading.ts        Client-side hook wrapping the fetch call to
+                                /api/reading — exposes {data, loading, error,
+                                generateReading}.
 ```
 
 ---
 
-## 🧠 How Pravaah Works
+## Data Flow
 
-Pravaah follows a structured processing pipeline:
-
-```text
-User Information
-       ↓
-Data Validation
-       ↓
-Data Processing
-       ↓
-AI Analysis
-       ↓
-Structured Response
-       ↓
-Database
-       ↓
-Personalized Report
-       ↓
-Web + PDF
 ```
-
-The system separates data processing from AI interpretation to provide more consistent and reliable results.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer          | Technology                          |
-| -------------- | ----------------------------------- |
-| Frontend       | Next.js                             |
-| Styling        | Tailwind CSS                        |
-| UI             | Component Library                   |
-| Authentication | Clerk                               |
-| Backend        | Next.js API Routes / Server Actions |
-| Database       | PostgreSQL                          |
-| ORM            | Prisma / Drizzle                    |
-| AI             | AI API                              |
-| PDF            | PDF Generation Library              |
-| Storage        | Object Storage                      |
-
----
-
-## 📁 Project Structure
-
-```text
-pravaah/
-│
-├── app/
-│   ├── page.tsx
-│   ├── login/
-│   ├── dashboard/
-│   ├── report/
-│   ├── create/
-│   └── api/
-│
-├── components/
-│   ├── Navbar.tsx
-│   ├── Dashboard.tsx
-│   ├── ReportCard.tsx
-│   ├── PersonalForm.tsx
-│   └── UI/
-│
-├── lib/
-│   ├── ai/
-│   ├── database/
-│   ├── validation/
-│   └── pdf/
-│
-├── prisma/
-│   └── schema.prisma
-│
-├── public/
-│   └── assets/
-│
-├── .env.local
-├── package.json
-├── next.config.js
-└── README.md
+User submits birth form (name, dob, time, place)
+        │
+        ▼
+POST /api/reading  (requires signed-in Clerk user)
+        │
+        ▼
+generateFullReading()
+        │
+        ├─► getNumerology(dob)              → mulank, bhagyank
+        ├─► geocodePlace(place)             → lat, lng
+        ├─► getTimezoneName(lat, lng)       → IANA timezone
+        ├─► toUtcDate(dob, time, tz)        → correct UTC birth moment
+        ├─► calculateJyotish(utcDate, ...)  → ascendant + 9 planets
+        │
+        ▼
+buildUserPrompt(calculated data)  →  callAIForReading()
+        │                                │
+        │                    ┌───────────┴───────────┐
+        │                    ▼                       ▼
+        │                 Gemini                   Groq (fallback,
+        │              (primary)                  only on 429)
+        │                    │                       │
+        │                    └───────────┬───────────┘
+        ▼                                ▼
+                     AI's JSON response
+                                │
+                                ▼
+                  Validate against ReadingSchema (zod)
+                     │                        │
+                  valid                    invalid
+                     │                        │
+                     ▼                        ▼
+                 Return it          Retry once with a
+                                    stricter reminder,
+                                    then validate again
+                                │
+                                ▼
+              FullReading JSON returned to client
+                                │
+                                ▼
+        Saved to sessionStorage, user routed to /discover
+                                │
+                                ▼
+              Rendered in the fixed template
 ```
 
 ---
 
-## 🤖 AI Response Structure
-
-Pravaah uses structured AI responses so the frontend can display information consistently.
-
-Example:
-
-```json
-{
-  "profile": {},
-
-  "personality": {
-    "overview": "",
-    "strengths": [],
-    "challenges": []
-  },
-
-  "education": {
-    "insights": [],
-    "learningStyle": ""
-  },
-
-  "career": {
-    "insights": [],
-    "workStyle": ""
-  },
-
-  "relationships": {
-    "insights": [],
-    "communicationStyle": ""
-  },
-
-  "growthAreas": [],
-
-  "summary": ""
-}
-```
-
-This structured approach allows the frontend to transform the response into beautiful cards, sections, and report components.
-
----
-
-## 📖 Report Page
-
-The report page should provide a professional and readable experience.
-
-### Report Header
-
-```text
-Your Personal Report
-
-Prepared for:
-Example User
-
-Generated:
-04 September 2026
-```
-
-### Report Sections
-
-```text
-┌──────────────────────────────┐
-│      PERSONAL PROFILE        │
-└──────────────────────────────┘
-
-┌──────────────────────────────┐
-│        PERSONALITY           │
-└──────────────────────────────┘
-
-┌──────────────────────────────┐
-│         EDUCATION            │
-└──────────────────────────────┘
-
-┌──────────────────────────────┐
-│           CAREER             │
-└──────────────────────────────┘
-
-┌──────────────────────────────┐
-│       RELATIONSHIPS          │
-└──────────────────────────────┘
-
-┌──────────────────────────────┐
-│      AREAS FOR GROWTH        │
-└──────────────────────────────┘
-
-┌──────────────────────────────┐
-│       FINAL SUMMARY          │
-└──────────────────────────────┘
-```
-
-Long sections can use expandable cards to keep the interface clean.
-
----
-
-## 📄 PDF Generation
-
-Pravaah allows users to generate a professional PDF version of their report.
-
-```text
-Report Data
-     ↓
-PDF Template
-     ↓
-PDF Generator
-     ↓
-Generated Report
-     ↓
-Download
-```
-
-The PDF should have a dedicated report layout rather than simply printing the webpage.
-
----
-
-## 🗄️ Database
-
-### Users
-
-```text
-id
-clerkUserId
-createdAt
-updatedAt
-```
-
-### Reports
-
-```text
-id
-userId
-personalInformation
-processedData
-aiResult
-createdAt
-updatedAt
-pdfUrl
-```
-
-Each report is associated with the authenticated user.
-
----
-
-## 🔐 Environment Variables
-
-Create a `.env.local` file:
-
-```env
-# Clerk
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-
-# Database
-DATABASE_URL=
-
-# AI
-AI_API_KEY=
-
-# Optional Storage
-STORAGE_URL=
-STORAGE_API_KEY=
-```
-
-> **Important:** Never commit `.env.local` or expose private API keys in frontend code.
-
----
-
-## ⚙️ Installation
-
-### 1. Clone the repository
+## Getting Started (Local Development)
 
 ```bash
-git clone https://github.com/your-username/pravaah.git
-cd pravaah
-```
-
-### 2. Install dependencies
-
-```bash
+# 1. Install dependencies
 npm install
-```
+npm install ephemeris geo-tz luxon zod
 
-### 3. Configure environment variables
+# 2. Set up environment variables (see below)
+cp .env.example .env.local   # or create .env.local manually
 
-Create:
-
-```text
-.env.local
-```
-
-Add your required credentials.
-
-### 4. Set up the database
-
-```bash
-npx prisma generate
-npx prisma migrate dev
-```
-
-### 5. Run the development server
-
-```bash
+# 3. Run the dev server
 npm run dev
 ```
 
-Open:
+Open [http://localhost:3000](http://localhost:3000).
 
-```text
-http://localhost:3000
+---
+
+## Environment Variables
+
+Create `.env.local` in the project root:
+
+```bash
+# Clerk (get from dashboard.clerk.com/last-active?path=api-keys)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+# Gemini — primary AI provider (get from aistudio.google.com)
+GEMINI_API_KEY=your_gemini_key
+GEMINI_MODEL=gemini-flash-latest   # optional override
+
+# Groq — fallback AI provider, used only when Gemini hits its quota
+# (get from console.groq.com)
+GROQ_API_KEY=your_groq_key
+GROQ_MODEL=openai/gpt-oss-20b      # optional override
 ```
 
----
+**Never** commit `.env.local` — confirm it's listed in `.gitignore`. All keys above are read only in server-side files (API routes) and are never exposed to the browser.
 
-## 🎨 Design Philosophy
-
-Pravaah should feel:
-
-* 🌊 Calm
-* ✨ Premium
-* 🧠 Intelligent
-* 🎯 Personal
-* 🧼 Clean
-* 🛡️ Trustworthy
-* 📱 Responsive
-* 🌙 Modern
-
-The interface should avoid feeling like a generic AI tool.
-
-### Visual Direction
-
-```text
-Premium Background
-        +
-Subtle Visual Elements
-        +
-Clean Cards
-        +
-Soft Gradients
-        +
-Modern Typography
-        +
-Smooth Animations
-```
-
-Animations should remain subtle and should never interfere with readability.
+When deploying, add the same variables in **Vercel → Project Settings → Environment Variables**, with the **Production** environment checked (not just Preview).
 
 ---
 
-## 🛡️ AI Guidelines
+## Deployment (Vercel)
 
-The AI should:
-
-* Avoid presenting uncertain information as absolute fact.
-* Avoid frightening or harmful predictions.
-* Clearly communicate uncertainty where appropriate.
-* Never invent missing user information.
-* Follow the predefined response structure.
-* Return valid structured data.
-* Keep recommendations practical and constructive.
-* Distinguish user-provided information from AI-generated insights.
+1. Push the repo to GitHub.
+2. Import it into Vercel.
+3. Add all environment variables listed above under Production.
+4. Deploy — Vercel auto-builds on every push to `main`.
+5. `ephemeris`, `geo-tz`, `luxon`, and `zod` are all pure JavaScript with no native/compiled dependencies, so they run cleanly on Vercel's serverless functions without any special configuration.
 
 ---
 
-## 🔒 Privacy & Security
+## AI Provider Fallback
 
-Pravaah takes user privacy seriously.
+`lib/ai/callAIForReading.ts` tries **Gemini** first. If Gemini specifically returns an HTTP 429 (quota/rate limit) error, it automatically retries the same request with **Groq** instead of failing. Any other kind of error (bad request, invalid key, malformed prompt) is *not* retried on a different provider — it's surfaced immediately, since switching providers won't fix a real bug.
 
-The application should provide:
+Free-tier model IDs on both providers change periodically as providers retire older models. If you see a `model_not_found` or similar error:
+- **Gemini:** check [ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models) and update `GEMINI_MODEL`.
+- **Groq:** check [console.groq.com/docs/deprecations](https://console.groq.com/docs/deprecations) and update `GROQ_MODEL`.
 
-* Secure authentication
-* Protected user reports
-* Secure server-side API calls
-* API key protection
-* Report deletion
-* Account deletion
-* Clear data-storage information
-* Privacy policy
-
-Only the information required for providing the service should be stored.
+Both are environment variables, so no code changes are needed when a model is retired.
 
 ---
 
-## 🚧 Development Roadmap
+## Known Limitations
 
-### Phase 1 — MVP
-
-```text
-Landing Page
-     ↓
-Authentication
-     ↓
-Dashboard
-     ↓
-Personal Information Form
-     ↓
-Data Processing
-     ↓
-AI Analysis
-     ↓
-Report Page
-```
-
-### Phase 2 — Persistence
-
-Add:
-
-* PostgreSQL database
-* Report history
-* Saved reports
-* PDF generation
-
-### Phase 3 — Enhanced Experience
-
-Add:
-
-* Improved report visualizations
-* More personalized insights
-* Advanced dashboard
-* Better PDF templates
-* Report sharing
-* Profile management
-
-### Phase 4 — Future Features
-
-Potential additions:
-
-* Multiple profiles
-* Report comparison
-* Shareable reports
-* Subscription system
-* Usage limits
-* Premium reports
-* Personalized recommendations
+- **No database yet.** Readings are currently held only in `sessionStorage` on the client — a page refresh loses the current reading, and there's no reading history. Adding Postgres (Neon/Supabase, both free tier) + Prisma is the natural next step.
+- **Jyotish precision is approximate, not observatory-grade.** The Lahiri ayanamsa and ascendant calculations use standard approximation formulas, accurate enough to correctly place planets in the right sign/nakshatra, but not to arc-second precision. For professional-grade accuracy, swap in the Swiss Ephemeris (`sweph` npm package), which requires bundling ephemeris data files.
+- **No caching.** The same person requesting a reading twice currently triggers two separate AI calls, which is wasteful — adding a cache (e.g., Vercel KV / Upstash Redis, keyed by a hash of the birth details) would meaningfully cut AI usage.
+- **Geocoding rate limits.** Nominatim's usage policy asks for roughly 1 request/second; fine for this app's volume, but don't batch-geocode many readings in a tight loop.
 
 ---
 
-## 🌊 Why Pravaah?
+## Troubleshooting
 
-**Pravaah** represents the continuous flow of a person's journey.
+**"Missing publishableKey" (Clerk):** Confirm `.env.local` has `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (the `NEXT_PUBLIC_` prefix is required for browser-side Clerk code), and restart the dev server — Next.js only reads env files on startup.
 
-The goal of the platform is to turn personal information into a clear, structured experience that helps users explore themselves, understand different perspectives, and reflect on their journey.
+**"Parsing CSS source code failed" on `globals.css`:** Usually a UTF-8 BOM at the very start of the file. Re-save the file as UTF-8 *without* BOM and clear `.next` before rebuilding.
 
----
+**"Gemini quota reached and fallback failed" with a `model_not_found` error:** The Groq model ID was deprecated — see [AI Provider Fallback](#ai-provider-fallback) above.
 
-## 📌 Project Status
-
-🚧 **Currently in development**
-
-Pravaah is being built as a modern AI-powered personal insight platform with a focus on:
-
-* Personalization
-* Privacy
-* Simplicity
-* Structured AI output
-* Professional reports
-* Excellent user experience
+**AI response fails schema validation repeatedly:** Check `lib/ai/promptSchema.ts`'s `SYSTEM_PROMPT` is being sent correctly, and confirm `generationConfig.responseMimeType` is set to `"application/json"` in `gemini.ts` / `response_format` in `groq.ts`.
 
 ---
 
-## 👨‍💻 Author
+## Disclaimer
 
-**Shivang Bijalwan**
-
-Built with ❤️ using modern web technologies and AI.
+Numerology and Jyotish interpretations are traditional systems intended for personal reflection and entertainment. They are not scientifically validated predictions and should not be treated as a substitute for professional medical, legal, or financial advice.
