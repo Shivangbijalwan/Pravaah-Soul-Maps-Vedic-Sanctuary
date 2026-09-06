@@ -23,7 +23,26 @@ export const metadata: Metadata = {
   title: "Pravaah | Soul Maps & Vedic Sanctuary",
   description:
     "A contemplative sanctuary for personal introspection, Vedic blueprints, and daily spiritual discovery.",
+
+  openGraph: {
+    title: "Pravaah | Soul Maps & Vedic Sanctuary",
+    description: "A contemplative sanctuary for personal introspection, Vedic blueprints, and daily spiritual discovery.",
+    url: "https://yourdomain.com",
+    siteName: "Pravaah | Soul Maps & Vedic Sanctuary",
+    images: [
+      {
+        url: "https://yourdomain.com/OG.png",
+        width: 1200,
+        height: 630,
+        alt: "Pravaah | Soul Maps & Vedic Sanctuary A contemplative sanctuary for personal introspection, Vedic blueprints, and daily spiritual discovery.",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
 };
+
+
 
 export default function RootLayout({
   children,
