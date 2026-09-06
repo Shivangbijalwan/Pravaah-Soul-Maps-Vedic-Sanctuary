@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 
@@ -42,6 +43,7 @@ export default function RootLayout({
         >
           {children}
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
