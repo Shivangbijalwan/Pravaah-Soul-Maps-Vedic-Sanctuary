@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Sparkles, Scale, Compass, type LucideIcon } from "lucide-react";
 
-
 const PALETTE = {
   void: "#0B0907",
   panel: "#15110D",
@@ -22,14 +21,6 @@ const CHAPTER_ICON: Record<Section, LucideIcon> = {
   Equilibrium: Scale,
   Vocation: Compass,
 };
-
-const CARD_WIDTH = 250;
-const CARD_HEIGHT = 500;
-const GAP = 40;
-const STEP = CARD_WIDTH + GAP;
-const AMPLITUDE = 56; // how high the middle of the arc lifts, in px
-const MAX_ROTATE = 11; // degrees, at the far edges of the arc
-const SPEED = 46; // pixels per second
 
 interface StatProfile {
   variant: "stat";
@@ -186,17 +177,118 @@ const PROFILES: Profile[] = [
   },
 ];
 
-function PhoneCard({ profile }: { profile: Profile }) {
+// Responsive values based on viewport width
+function getResponsiveValues(containerWidth: number) {
+  let cardWidth: number;
+  let cardHeight: number;
+  let gap: number;
+  let amplitude: number;
+  let maxRotate: number;
+  let speed: number;
+  let headingSize: string;
+  let cardPadding: number;
+  let titleFontSize: number;
+  let bodyFontSize: number;
+  let badgeFontSize: number;
+
+  if (containerWidth < 480) {
+    // Mobile (extra small)
+    cardWidth = Math.min(200, containerWidth - 40);
+    cardHeight = 420;
+    gap = 20;
+    amplitude = 32;
+    maxRotate = 8;
+    speed = 30;
+    headingSize = "clamp(20px, 5vw, 28px)";
+    cardPadding = 12;
+    titleFontSize = 16;
+    bodyFontSize = 10.5;
+    badgeFontSize = 8;
+  } else if (containerWidth < 768) {
+    // Mobile (small)
+    cardWidth = Math.min(220, containerWidth - 30);
+    cardHeight = 450;
+    gap = 24;
+    amplitude = 40;
+    maxRotate = 9;
+    speed = 35;
+    headingSize = "clamp(22px, 4.5vw, 32px)";
+    cardPadding = 13;
+    titleFontSize = 18;
+    bodyFontSize = 11;
+    badgeFontSize = 9;
+  } else if (containerWidth < 1024) {
+    // Tablet
+    cardWidth = Math.min(240, containerWidth - 60);
+    cardHeight = 470;
+    gap = 30;
+    amplitude = 48;
+    maxRotate = 10;
+    speed = 40;
+    headingSize = "clamp(26px, 4.2vw, 36px)";
+    cardPadding = 14;
+    titleFontSize = 19;
+    bodyFontSize = 11.5;
+    badgeFontSize = 9.5;
+  } else {
+    // Desktop
+    cardWidth = 250;
+    cardHeight = 500;
+    gap = 40;
+    amplitude = 56;
+    maxRotate = 11;
+    speed = 46;
+    headingSize = "clamp(26px, 4.4vw, 40px)";
+    cardPadding = 10;
+    titleFontSize = 21;
+    bodyFontSize = 12.5;
+    badgeFontSize = 10.5;
+  }
+
+  return {
+    cardWidth,
+    cardHeight,
+    gap,
+    amplitude,
+    maxRotate,
+    speed,
+    headingSize,
+    cardPadding,
+    titleFontSize,
+    bodyFontSize,
+    badgeFontSize,
+  };
+}
+
+function PhoneCard({
+  profile,
+  cardWidth,
+  cardHeight,
+  cardPadding,
+  titleFontSize,
+  bodyFontSize,
+  badgeFontSize,
+}: {
+  profile: Profile;
+  cardWidth: number;
+  cardHeight: number;
+  cardPadding: number;
+  titleFontSize: number;
+  bodyFontSize: number;
+  badgeFontSize: number;
+}) {
   const Icon = CHAPTER_ICON[profile.section] ?? Sparkles;
+  const borderRadius = Math.max(24, cardWidth * 0.15);
+  const notchHeight = Math.max(16, cardHeight * 0.04);
 
   return (
     <>
       <div
         style={{
           position: "relative",
-          width: CARD_WIDTH,
-          height: CARD_HEIGHT,
-          borderRadius: 34,
+          width: cardWidth,
+          height: cardHeight,
+          borderRadius,
           background: "linear-gradient(180deg,#221C16,#0E0B08)",
           border: "1px solid rgba(243,236,226,0.12)",
           boxShadow:
@@ -204,15 +296,16 @@ function PhoneCard({ profile }: { profile: Profile }) {
           padding: 10,
         }}
       >
+        {/* Phone notch */}
         <div
           style={{
             position: "absolute",
             top: 10,
             left: "50%",
             transform: "translateX(-50%)",
-            width: 90,
-            height: 20,
-            borderRadius: 12,
+            width: Math.max(60, cardWidth * 0.35),
+            height: notchHeight,
+            borderRadius: 10,
             background: "#000",
             zIndex: 3,
           }}
@@ -223,28 +316,34 @@ function PhoneCard({ profile }: { profile: Profile }) {
             position: "relative",
             width: "100%",
             height: "100%",
-            borderRadius: 26,
+            borderRadius: borderRadius - 10,
             overflow: "hidden",
             background: PALETTE.panel,
             border: `1px solid ${PALETTE.panelEdge}`,
-            padding: "34px 18px 20px",
+            padding: `${cardPadding + 4}px ${cardPadding}px ${cardPadding}px`,
             display: "flex",
             flexDirection: "column",
           }}
         >
+          {/* Header section */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              marginBottom: 8,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <Icon size={13} color={PALETTE.ember} strokeWidth={2.2} />
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Icon
+                size={Math.max(11, badgeFontSize)}
+                color={PALETTE.ember}
+                strokeWidth={2.2}
+              />
               <span
                 style={{
                   fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 10.5,
+                  fontSize: badgeFontSize,
                   letterSpacing: "0.08em",
                   color: PALETTE.ember,
                   textTransform: "uppercase",
@@ -260,9 +359,9 @@ function PhoneCard({ profile }: { profile: Profile }) {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 40,
-                height: 40,
-                borderRadius: 12,
+                width: Math.max(32, cardWidth * 0.15),
+                height: Math.max(32, cardWidth * 0.15),
+                borderRadius: 10,
                 background: "rgba(243,236,226,0.05)",
                 border: `1px solid ${PALETTE.panelEdge}`,
               }}
@@ -270,7 +369,7 @@ function PhoneCard({ profile }: { profile: Profile }) {
               <span
                 style={{
                   fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 15,
+                  fontSize: badgeFontSize + 2,
                   color: PALETTE.ink,
                   lineHeight: 1,
                 }}
@@ -280,10 +379,10 @@ function PhoneCard({ profile }: { profile: Profile }) {
               <span
                 style={{
                   fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 6.5,
+                  fontSize: badgeFontSize - 2,
                   letterSpacing: "0.06em",
                   color: PALETTE.inkMuted,
-                  marginTop: 2,
+                  marginTop: 1,
                 }}
               >
                 {profile.badgeBottom}
@@ -291,26 +390,29 @@ function PhoneCard({ profile }: { profile: Profile }) {
             </div>
           </div>
 
+          {/* Title */}
           <h3
             style={{
               fontFamily: "'Fraunces', serif",
               fontWeight: 500,
-              fontSize: 21,
+              fontSize: titleFontSize,
               lineHeight: 1.15,
               color: PALETTE.ink,
-              margin: "14px 0 10px",
+              margin: `${cardPadding}px 0 8px`,
             }}
           >
             {profile.title}
           </h3>
 
+          {/* Body text */}
           <p
             style={{
               fontFamily: "'Manrope', sans-serif",
-              fontSize: 12.5,
-              lineHeight: 1.55,
+              fontSize: bodyFontSize,
+              lineHeight: 1.5,
               color: PALETTE.inkMuted,
               margin: 0,
+              marginBottom: 12,
             }}
           >
             {profile.body}
@@ -318,6 +420,7 @@ function PhoneCard({ profile }: { profile: Profile }) {
 
           <div style={{ flex: 1 }} />
 
+          {/* Stat variant */}
           {profile.variant === "stat" && (
             <div>
               <div
@@ -330,7 +433,7 @@ function PhoneCard({ profile }: { profile: Profile }) {
                 <span
                   style={{
                     fontFamily: "'Manrope', sans-serif",
-                    fontSize: 11.5,
+                    fontSize: bodyFontSize - 1,
                     color: PALETTE.ink,
                   }}
                 >
@@ -339,7 +442,7 @@ function PhoneCard({ profile }: { profile: Profile }) {
                 <span
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 11.5,
+                    fontSize: bodyFontSize - 1,
                     color: PALETTE.gold,
                   }}
                 >
@@ -348,8 +451,8 @@ function PhoneCard({ profile }: { profile: Profile }) {
               </div>
               <div
                 style={{
-                  height: 6,
-                  borderRadius: 4,
+                  height: 5,
+                  borderRadius: 3,
                   background: PALETTE.track,
                   overflow: "hidden",
                 }}
@@ -358,7 +461,7 @@ function PhoneCard({ profile }: { profile: Profile }) {
                   style={{
                     width: `${profile.statValue}%`,
                     height: "100%",
-                    borderRadius: 4,
+                    borderRadius: 3,
                     background: `linear-gradient(90deg, ${PALETTE.ember}, ${PALETTE.gold})`,
                   }}
                 />
@@ -366,17 +469,18 @@ function PhoneCard({ profile }: { profile: Profile }) {
             </div>
           )}
 
+          {/* Tags variant */}
           {profile.variant === "tags" && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {profile.tags.map((tag) => (
                 <span
                   key={tag}
                   style={{
                     fontFamily: "'Manrope', sans-serif",
-                    fontSize: 10.5,
+                    fontSize: bodyFontSize - 1.5,
                     color: PALETTE.ink,
-                    padding: "5px 10px",
-                    borderRadius: 20,
+                    padding: "4px 8px",
+                    borderRadius: 16,
                     background: "rgba(243,236,226,0.06)",
                     border: `1px solid ${PALETTE.panelEdge}`,
                   }}
@@ -387,30 +491,31 @@ function PhoneCard({ profile }: { profile: Profile }) {
             </div>
           )}
 
+          {/* Pills variant */}
           {profile.variant === "pills" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div>
                 <div
                   style={{
                     fontFamily: "'Manrope', sans-serif",
-                    fontSize: 10,
+                    fontSize: bodyFontSize - 2,
                     letterSpacing: "0.04em",
                     color: PALETTE.gold,
-                    marginBottom: 5,
+                    marginBottom: 4,
                   }}
                 >
                   Core strengths
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {profile.strengths.map((s) => (
                     <span
                       key={s}
                       style={{
                         fontFamily: "'Manrope', sans-serif",
-                        fontSize: 10,
+                        fontSize: bodyFontSize - 2,
                         color: PALETTE.ink,
-                        padding: "4px 8px",
-                        borderRadius: 20,
+                        padding: "3px 6px",
+                        borderRadius: 16,
                         background: "rgba(240,180,41,0.08)",
                         border: "1px solid rgba(240,180,41,0.2)",
                       }}
@@ -424,24 +529,24 @@ function PhoneCard({ profile }: { profile: Profile }) {
                 <div
                   style={{
                     fontFamily: "'Manrope', sans-serif",
-                    fontSize: 10,
+                    fontSize: bodyFontSize - 2,
                     letterSpacing: "0.04em",
                     color: "#D9856B",
-                    marginBottom: 5,
+                    marginBottom: 4,
                   }}
                 >
                   Growth edges
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {profile.growth.map((g) => (
                     <span
                       key={g}
                       style={{
                         fontFamily: "'Manrope', sans-serif",
-                        fontSize: 10,
+                        fontSize: bodyFontSize - 2,
                         color: PALETTE.ink,
-                        padding: "4px 8px",
-                        borderRadius: 20,
+                        padding: "3px 6px",
+                        borderRadius: 16,
                         background: "rgba(232,99,44,0.08)",
                         border: "1px solid rgba(232,99,44,0.2)",
                       }}
@@ -456,11 +561,12 @@ function PhoneCard({ profile }: { profile: Profile }) {
         </div>
       </div>
 
-      <div style={{ marginTop: 14, textAlign: "center" }}>
+      {/* Card label */}
+      <div style={{ marginTop: Math.max(10, cardPadding * 2), textAlign: "center" }}>
         <div
           style={{
             fontFamily: "'Manrope', sans-serif",
-            fontSize: 10,
+            fontSize: badgeFontSize - 1,
             letterSpacing: "0.08em",
             color: PALETTE.inkMuted,
             textTransform: "uppercase",
@@ -471,7 +577,7 @@ function PhoneCard({ profile }: { profile: Profile }) {
         <div
           style={{
             fontFamily: "'Fraunces', serif",
-            fontSize: 14,
+            fontSize: bodyFontSize,
             color: PALETTE.ink,
             marginTop: 2,
           }}
@@ -494,12 +600,14 @@ export default function InfiniteHoroscopeCarousel() {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const containerWidthRef = useRef(1200);
+  const responsiveValuesRef = useRef(getResponsiveValues(1200));
   const scrollRef = useRef(0);
   const hoveredRef = useRef(false);
   const reducedMotionRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     reducedMotionRef.current =
@@ -508,19 +616,30 @@ export default function InfiniteHoroscopeCarousel() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const el = viewportRef.current;
-    if (el) containerWidthRef.current = el.clientWidth;
+    if (el) {
+      containerWidthRef.current = el.clientWidth;
+      responsiveValuesRef.current = getResponsiveValues(containerWidthRef.current);
+      setIsMobile(containerWidthRef.current < 768);
+    }
 
     let ro: ResizeObserver | undefined;
     if (el && typeof ResizeObserver !== "undefined") {
       ro = new ResizeObserver((entries) => {
         containerWidthRef.current = entries[0].contentRect.width;
+        responsiveValuesRef.current = getResponsiveValues(containerWidthRef.current);
+        setIsMobile(containerWidthRef.current < 768);
       });
       ro.observe(el);
     }
 
+    const vals = responsiveValuesRef.current;
+    const STEP = vals.cardWidth + vals.gap;
     const totalTrack = STEP * total;
 
     function updatePositions() {
+      const vals = responsiveValuesRef.current;
+      const STEP = vals.cardWidth + vals.gap;
+      const totalTrack = STEP * total;
       const centerX = containerWidthRef.current / 2;
       const effectiveScroll =
         ((scrollRef.current % totalTrack) + totalTrack) % totalTrack;
@@ -531,13 +650,13 @@ export default function InfiniteHoroscopeCarousel() {
         if (x < -STEP) x += totalTrack;
         if (x > totalTrack - STEP) x -= totalTrack;
 
-        const cardCenter = x + CARD_WIDTH / 2;
+        const cardCenter = x + vals.cardWidth / 2;
         let normX = centerX > 0 ? (cardCenter - centerX) / centerX : 0;
         if (normX > 1) normX = 1;
         if (normX < -1) normX = -1;
 
-        const yOffset = -AMPLITUDE * (1 - normX * normX);
-        const rotateDeg = normX * MAX_ROTATE;
+        const yOffset = -vals.amplitude * (1 - normX * normX);
+        const rotateDeg = normX * vals.maxRotate;
         const scale = 1 - 0.05 * (normX * normX);
         const opacity = 1 - 0.12 * Math.abs(normX);
 
@@ -555,7 +674,7 @@ export default function InfiniteHoroscopeCarousel() {
       lastTimeRef.current = t;
 
       if (!hoveredRef.current && !reducedMotionRef.current) {
-        scrollRef.current += SPEED * dt;
+        scrollRef.current += responsiveValuesRef.current.speed * dt;
       }
       updatePositions();
       rafRef.current = requestAnimationFrame(tick);
@@ -573,20 +692,48 @@ export default function InfiniteHoroscopeCarousel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const vals = responsiveValuesRef.current;
+
   return (
     <section
       style={{
         position: "relative",
         width: "100%",
+        minHeight: "100vh",
         overflow: "hidden",
         background: PALETTE.void,
-        padding: "72px 0 64px",
+        padding: "clamp(40px, 8vw, 72px) 0 clamp(40px, 8vw, 64px)",
         boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@450;500;600&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
-        .horo-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        
+        * {
+          -webkit-touch-callout: none;
+        }
+        
+        .horo-cta {
+          transition: filter 0.2s ease, transform 0.2s ease;
+        }
+        
+        .horo-cta:hover {
+          filter: brightness(1.08);
+          transform: translateY(-1px);
+        }
+        
+        .horo-cta:active {
+          transform: translateY(0);
+        }
+        
+        @media (max-width: 767px) {
+          .horo-cta {
+            font-size: 12px;
+            padding: 10px 20px;
+          }
+        }
       `}</style>
 
       <div
@@ -596,9 +743,8 @@ export default function InfiniteHoroscopeCarousel() {
           left: "50%",
           transform: "translateX(-50%)",
           width: "min(900px, 140%)",
-          height: 460,
-          background:
-            "#0B0907",
+          height: "clamp(300px, 60vw, 460px)",
+          background: "#0B0907",
           pointerEvents: "none",
         }}
       />
@@ -607,25 +753,25 @@ export default function InfiniteHoroscopeCarousel() {
         style={{
           position: "relative",
           maxWidth: 640,
-          margin: "0 auto 56px",
-          padding: "0 24px",
+          margin: "0 auto clamp(30px, 5vw, 56px)",
+          padding: "0 clamp(16px, 5vw, 24px)",
           textAlign: "center",
           boxSizing: "border-box",
+          zIndex: 1,
         }}
       >
         <h2
           style={{
             fontFamily: "'Fraunces', serif",
             fontWeight: 500,
-            fontSize: "clamp(26px, 4.4vw, 40px)",
+            fontSize: vals.headingSize,
             lineHeight: 1.15,
             color: PALETTE.ink,
-            margin: "0 0 14px",
+            margin: "0 0 clamp(10px, 2vw, 14px)",
           }}
         >
           Every chart reads a different story
         </h2>
-    
       </div>
 
       <div
@@ -635,36 +781,47 @@ export default function InfiniteHoroscopeCarousel() {
         style={{
           position: "relative",
           width: "100%",
-          height: CARD_HEIGHT + 100 + AMPLITUDE,
+          height: Math.max(
+            vals.cardHeight + 100 + vals.amplitude,
+            (typeof window !== "undefined" ? window.innerHeight : 800) * 0.6
+          ),
           opacity: ready ? 1 : 0,
           transition: "opacity 0.4s ease",
+          flex: isMobile ? "0 1 auto" : "1 1 auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
+        {/* Left fade */}
         <div
           style={{
             position: "absolute",
             top: 0,
             bottom: 0,
             left: 0,
-            width: 100,
+            width: "clamp(40px, 10%, 100px)",
             background: `linear-gradient(90deg, ${PALETTE.void}, transparent)`,
             zIndex: 4,
             pointerEvents: "none",
           }}
         />
+
+        {/* Right fade */}
         <div
           style={{
             position: "absolute",
             top: 0,
             bottom: 0,
             right: 0,
-            width: 100,
-            background: "#0C0A09",
+            width: "clamp(40px, 10%, 100px)",
+            background: `linear-gradient(90deg, transparent, ${PALETTE.void})`,
             zIndex: 4,
             pointerEvents: "none",
           }}
         />
 
+        {/* Carousel track */}
         {track.map((profile, i) => (
           <div
             key={`${profile.id}-${i}`}
@@ -673,39 +830,52 @@ export default function InfiniteHoroscopeCarousel() {
             }}
             style={{
               position: "absolute",
-              top: AMPLITUDE,
+              top: vals.amplitude,
               left: 0,
-              width: CARD_WIDTH,
+              width: vals.cardWidth,
               transformOrigin: "50% 100%",
               willChange: "transform",
             }}
           >
-            <PhoneCard profile={profile} />
+            <PhoneCard
+              profile={profile}
+              cardWidth={vals.cardWidth}
+              cardHeight={vals.cardHeight}
+              cardPadding={vals.cardPadding}
+              titleFontSize={vals.titleFontSize}
+              bodyFontSize={vals.bodyFontSize}
+              badgeFontSize={vals.badgeFontSize}
+            />
           </div>
         ))}
       </div>
 
-      <div style={{ textAlign: "center", marginTop: 44 }}>
+      {/* CTA Button */}
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: "clamp(30px, 5vw, 44px)",
+          paddingBottom: "clamp(20px, 3vw, 32px)",
+          zIndex: 1,
+        }}
+      >
         <button
-          type="button" 
+          type="button"
           className="horo-cta"
           style={{
-          
             fontFamily: "'Manrope', sans-serif",
-            fontSize: 14,
+            fontSize: "clamp(12px, 2.5vw, 14px)",
             fontWeight: 600,
             color: "#1A1208",
             background: `linear-gradient(90deg, ${PALETTE.ember}, ${PALETTE.gold})`,
             border: "none",
             borderRadius: 30,
-            padding: "13px 28px",
+            padding: "clamp(10px, 2vw, 13px) clamp(20px, 4vw, 28px)",
             cursor: "pointer",
-            transition: "filter 0.2s ease, transform 0.2s ease",
-            
+            whiteSpace: "nowrap",
           }}
         >
           Sign in for your free reading
-          
         </button>
       </div>
     </section>
