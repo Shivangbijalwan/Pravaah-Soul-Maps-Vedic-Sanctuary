@@ -1,12 +1,7 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 
-export default clerkMiddleware(async (auth, request) => {
-  if (
-    request.nextUrl.pathname.startsWith('/home') ||
-    request.nextUrl.pathname.startsWith('/discover')
-  ) {
-    await auth.protect();
-  }
+export default clerkMiddleware(async () => {
+  // Pass through request and maintain Clerk session context
 });
 
 export const config = {

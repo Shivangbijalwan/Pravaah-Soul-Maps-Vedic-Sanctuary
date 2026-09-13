@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+import { useAuth, SignInButton, UserButton } from "@clerk/nextjs";
 import { BookOpen, House, Info, LogIn, Menu, Route, X, Star } from "lucide-react";
 import DiyaFlame from "./DiyaFlame";
 
@@ -12,19 +12,18 @@ const links = [
   { label: "Process", href: "#journey-process", icon: Route },
   { label: "Readings", href: "#reading-preview", icon: BookOpen },
   { label: "Testimonials", href: "#testimonials", icon: Star },
-  
 ];
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 30);
 
-      // Active section detection
       const sectionIds = ["home", "about", "journey-process", "reading-preview", "testimonials"];
       for (const id of [...sectionIds].reverse()) {
         const el = document.getElementById(id);
@@ -54,12 +53,14 @@ export function Navbar() {
       }`}
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-
         {/* Logo */}
         <a
           href="#home"
           className="flex items-center gap-3 group"
-          onClick={(e) => { e.preventDefault(); handleNavClick("#home"); }}
+          onClick={(e) => {
+            e.preventDefault();
+            handleNavClick("#home");
+          }}
           aria-label="Pravaah home"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#292524] bg-[#1C1917] group-hover:border-[#F97316]/50 transition-colors duration-300 group-hover:shadow-[0_0_20px_rgba(249,115,22,0.2)]">
@@ -84,56 +85,56 @@ export function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(link.href);
+                }}
                 className={`relative flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   isActive
                     ? "text-[#FAFAF9] bg-[#1C1917] border border-[#292524]"
                     : "text-[#A8A29E] hover:text-[#FAFAF9] hover:bg-[#1C1917]/60"
                 }`}
               >
-                <link.icon className={`h-3.5 w-3.5 transition-colors ${isActive ? "text-[#F97316]" : "text-[#78716C]"}`} aria-hidden="true" />
+                <link.icon
+                  className={`h-3.5 w-3.5 transition-colors ${
+                    isActive ? "text-[#F97316]" : "text-[#78716C]"
+                  }`}
+                  aria-hidden="true"
+                />
                 {link.label}
-                
-                
               </a>
             );
           })}
-        </nav>  
+        </nav>
 
         {/* Auth controls */}
-        <div className="flex items-center gap-2">
-          <Show when="signed-out">
-            <SignInButton mode="modal" fallbackRedirectUrl="/home">
-              <button
-                type="button"
-                className="group relative hidden sm:flex items-center gap-2 rounded-full bg-[#1C1917] border border-[#292524] px-5 py-2 text-sm font-medium text-[#FAFAF9] transition-all duration-300 hover:border-[#F97316]/50 hover:bg-[#221F1E] overflow-hidden"
+        <div className="flex items-center gap-2.5">
+          {isLoaded && isSignedIn ? (
+            <>
+              <Link
+                href="/home"
+                className="flex items-center gap-1.5 rounded-full border border-[#292524] bg-[#1C1917] px-4 py-2 text-sm font-medium text-[#FAFAF9] transition-all duration-300 hover:border-[#F97316]/50 hover:bg-[#221F1E]"
               >
-                <LogIn className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-                <span>Sign in</span>
-              </button>
-            </SignInButton>
-            <SignInButton mode="modal" fallbackRedirectUrl="/home">
-              <button
-                type="button"
-                className="sm:hidden flex items-center gap-2 rounded-full bg-[#F97316] px-4 py-2 text-sm font-medium text-[#0C0A09] flame-cta-glow transition-all"
-              >
-                <LogIn className="h-4 w-4" />
-              </button>
-            </SignInButton>
-          </Show>
+                <House className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+                <span>My Map</span>
+              </Link>
+              <UserButton />
+            </>
+          ) : (
+            <>
+              <SignInButton mode="modal" fallbackRedirectUrl="/home">
+                <button
+                  type="button"
+                  className="group relative flex items-center gap-2 rounded-full bg-[#1C1917] border border-[#292524] px-4 py-2 sm:px-5 text-sm font-medium text-[#FAFAF9] transition-all duration-300 hover:border-[#F97316]/50 hover:bg-[#221F1E] cursor-pointer"
+                >
+                  <LogIn className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+                  <span>Sign in</span>
+                </button>
+              </SignInButton>
 
-          <Show when="signed-in">
-            <Link
-              href="/home"
-              className="hidden sm:flex items-center gap-1.5 rounded-full border border-[#292524] px-4 py-2 text-sm font-medium text-[#FAFAF9] transition-all duration-300 hover:border-[#F97316]/50 hover:bg-[#1C1917]"
-            >
-              <House className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-              My Map
-            </Link>
-            <UserButton />
-          </Show>
-
-        
+             
+            </>
+          )}
 
           {/* Mobile menu toggle */}
           <button
@@ -156,7 +157,10 @@ export function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(link.href);
+                  }}
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#FAFAF9] hover:bg-[#1C1917] hover:text-[#FEF08A] transition-all"
                 >
                   <link.icon className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
@@ -164,19 +168,8 @@ export function Navbar() {
                 </a>
               ))}
             </div>
-            <div className="pt-4 border-t border-[#292524]">
-              <Show when="signed-out">
-                <SignInButton mode="modal" fallbackRedirectUrl="/home">
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-center gap-2 rounded-full bg-[#F97316] py-3 text-sm font-semibold text-[#0C0A09] flame-cta-glow"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Sign in & Begin Journey
-                  </button>
-                </SignInButton>
-              </Show>
-              <Show when="signed-in">
+            <div className="pt-4 border-t border-[#292524] space-y-2.5">
+              {isLoaded && isSignedIn ? (
                 <Link
                   href="/home"
                   className="w-full flex items-center justify-center gap-2 rounded-full bg-[#F97316] py-3 text-sm font-semibold text-[#0C0A09] flame-cta-glow"
@@ -185,7 +178,27 @@ export function Navbar() {
                   <House className="w-4 h-4" />
                   Go to My Soul Map
                 </Link>
-              </Show>
+              ) : (
+                <>
+                  <SignInButton mode="modal" fallbackRedirectUrl="/home">
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-center gap-2 rounded-full border border-[#292524] bg-[#1C1917] py-2.5 text-sm font-medium text-[#FAFAF9] hover:bg-[#221F1E] cursor-pointer"
+                    >
+                      <LogIn className="w-4 h-4 text-[#F97316]" />
+                      Sign in
+                    </button>
+                  </SignInButton>
+                  <Link
+                    href="/home"
+                    className="w-full flex items-center justify-center gap-2 rounded-full bg-[#F97316] py-3 text-sm font-semibold text-[#0C0A09] flame-cta-glow"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Star className="w-4 h-4" />
+                    Enter Sanctuary (Get Reading)
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
