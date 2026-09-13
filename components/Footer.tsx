@@ -117,9 +117,9 @@ export function Footer({ onOpenBirthModal }: FooterProps) {
           <div className="pt-8 border-t border-[#1C1917] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#78716C]">
             <p>© {new Date().getFullYear()} Pravaah Soul Maps. All sacred rights reserved.</p>
             <p className="flex items-center gap-2">
-              <span>Carved with reverence</span>
+              <span>Don't blindly trust us</span>
               <span className="text-[#F97316]">✦</span>
-              <span>For quiet reflection</span>
+              <span>It can be wrong</span>
             </p>
           </div>
         </div>
