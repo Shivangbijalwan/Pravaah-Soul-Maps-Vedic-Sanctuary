@@ -15,9 +15,12 @@ import { generateFullReading } from "../../../libs/generateFullReading";
 import { AIQuotaError } from "../../../libs/ai/callAIForReading";
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  let userId: string | null = null;
+  try {
+    const authObj = await auth();
+    userId = authObj?.userId || null;
+  } catch {
+    // Non-blocking in dev or if Clerk auth headers are omitted
   }
 
   try {

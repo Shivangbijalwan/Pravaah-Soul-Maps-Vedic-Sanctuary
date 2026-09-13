@@ -20,14 +20,20 @@ export async function callAIForReading(systemPrompt: string, userPrompt: string)
   try {
     return await callGeminiForReading(systemPrompt, userPrompt);
   } catch (err: unknown) {
-    const isQuotaError =
-      typeof err === "object" &&
-      err !== null &&
-      "status" in err &&
-      err.status === 429;
+    const shouldFallback =
+      (typeof err === "object" &&
+        err !== null &&
+        "status" in err &&
+        (err.status === 429 || err.status === 503 || err.status === 500 || err.status === 504)) ||
+      (err instanceof Error &&
+        (err.message.includes("503") ||
+          err.message.includes("high demand") ||
+          err.message.includes("quota") ||
+          err.message.includes("rate limit") ||
+          err.message.includes("429")));
 
-    if (!isQuotaError) {
-      throw err; // a real bug — don't mask it by silently switching providers
+    if (!shouldFallback) {
+      throw err;
     }
 
     try {

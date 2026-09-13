@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Sparkles, BookOpen, Flame, LogIn, House, User } from "lucide-react";
 import DiyaFlame from "./DiyaFlame";
-import { Show, SignInButton } from "@clerk/nextjs";
+import { useAuth, SignInButton } from "@clerk/nextjs";
 
 interface FooterProps {
   onOpenBirthModal?: () => void;
@@ -12,6 +12,7 @@ interface FooterProps {
 
 export function Footer({ onOpenBirthModal }: FooterProps) {
   const [activeTab, setActiveTab] = useState<"journey" | "discover" | "readings" | "profile">("journey");
+  const { isLoaded, isSignedIn } = useAuth();
 
   return (
     <>
@@ -90,43 +91,24 @@ export function Footer({ onOpenBirthModal }: FooterProps) {
             <div className="md:col-span-4">
               <h5 className="font-semibold text-[#FAFAF9] tracking-wider uppercase text-[10px] mb-5">Begin Your Journey</h5>
 
-              <div className="p-5 rounded-2xl bg-[#1C1917] border border-[#292524]">
-                <p className="text-sm text-[#A8A29E] leading-relaxed mb-4">
+              <div className="p-5 rounded-2xl bg-[#1C1917] border border-[#292524] space-y-3">
+                <p className="text-sm text-[#A8A29E] leading-relaxed">
                   Your Vedic soul map is one birth moment away. Enter your coordinates and discover your authentic blueprint.
                 </p>
 
-                <Show when="signed-out">
-                  <SignInButton mode="modal">
+               
+
+                {(!isLoaded || !isSignedIn) && (
+                  <SignInButton mode="modal" fallbackRedirectUrl="/home">
                     <button
                       type="button"
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#F97316]/15 border border-[#F97316]/30 text-sm font-medium text-[#F97316] hover:bg-[#F97316]/25 transition-all"
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-[#292524] bg-[#151312] text-xs font-medium text-[#A8A29E] hover:text-[#FAFAF9] hover:border-[#F97316]/40 transition-all cursor-pointer"
                     >
-                      <LogIn className="w-4 h-4" />
-                      Sign In to Begin
+                      <LogIn className="w-3.5 h-3.5 text-[#F97316]" />
+                      <span>Sign In with Clerk</span>
                     </button>
                   </SignInButton>
-                </Show>
-
-                <Show when="signed-in">
-                  {onOpenBirthModal ? (
-                    <button
-                      type="button"
-                      onClick={onOpenBirthModal}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#F97316]/15 border border-[#F97316]/30 text-sm font-medium text-[#F97316] hover:bg-[#F97316]/25 transition-all"
-                    >
-                      <House className="w-4 h-4" />
-                      Discover My Soul Map
-                    </button>
-                  ) : (
-                    <Link
-                      href="/home"
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#F97316]/15 border border-[#F97316]/30 text-sm font-medium text-[#F97316] hover:bg-[#F97316]/25 transition-all"
-                    >
-                      <House className="w-4 h-4" />
-                      Go to My Soul Map
-                    </Link>
-                  )}
-                </Show>
+                )}
               </div>
             </div>
           </div>
@@ -174,29 +156,14 @@ export function Footer({ onOpenBirthModal }: FooterProps) {
             <span className="text-[9px] font-medium tracking-wider">Readings</span>
           </a>
 
-          <Show when="signed-out">
-            <SignInButton mode="modal">
-              <button
-                type="button"
-                onClick={() => setActiveTab("profile")}
-                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${activeTab === "profile" ? "text-[#F97316]" : "text-[#78716C]"}`}
-              >
-                <LogIn className={`w-5 h-5 ${activeTab === "profile" ? "text-[#F97316]" : "text-[#78716C]"}`} />
-                <span className="text-[9px] font-medium tracking-wider">Sign In</span>
-              </button>
-            </SignInButton>
-          </Show>
-
-          <Show when="signed-in">
-            <Link
-              href="/home"
-              onClick={() => setActiveTab("profile")}
-              className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${activeTab === "profile" ? "text-[#FACC15]" : "text-[#78716C]"}`}
-            >
-              <User className={`w-5 h-5 ${activeTab === "profile" ? "text-[#FACC15]" : "text-[#78716C]"}`} />
-              <span className="text-[9px] font-medium tracking-wider">My Map</span>
-            </Link>
-          </Show>
+          <Link
+            href="/home"
+            onClick={() => setActiveTab("profile")}
+            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${activeTab === "profile" ? "text-[#F97316]" : "text-[#78716C]"}`}
+          >
+            <User className={`w-5 h-5 ${activeTab === "profile" ? "text-[#F97316]" : "text-[#78716C]"}`} />
+            <span className="text-[9px] font-medium tracking-wider">{isSignedIn ? "My Map" : "Sanctuary"}</span>
+          </Link>
 
         </div>
       </div>
