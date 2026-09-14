@@ -189,14 +189,7 @@ export function Navbar() {
                       Sign in
                     </button>
                   </SignInButton>
-                  <Link
-                    href="/home"
-                    className="w-full flex items-center justify-center gap-2 rounded-full bg-[#F97316] py-3 text-sm font-semibold text-[#0C0A09] flame-cta-glow"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Star className="w-4 h-4" />
-                    Enter Sanctuary (Get Reading)
-                  </Link>
+                
                 </>
               )}
             </div>
