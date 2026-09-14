@@ -20,25 +20,36 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://pravaah-soul-maps-vedic-sanctuary.vercel.app"
+  ),
   title: "Pravaah | Soul Maps & Vedic Sanctuary",
   description:
     "A contemplative sanctuary for personal introspection, Vedic blueprints, and daily spiritual discovery.",
 
   openGraph: {
     title: "Pravaah | Soul Maps & Vedic Sanctuary",
-    description: "A contemplative sanctuary for personal introspection, Vedic blueprints, and daily spiritual discovery.",
-    url: "https://yourdomain.com",
+    description:
+      "A contemplative sanctuary for personal introspection, Vedic blueprints, and daily spiritual discovery.",
+    url: "/",
     siteName: "Pravaah | Soul Maps & Vedic Sanctuary",
     images: [
       {
-        url: "https://yourdomain.com/OG.png",
+        url: "/OG.png",
         width: 1200,
         height: 630,
-        alt: "Pravaah | Soul Maps & Vedic Sanctuary A contemplative sanctuary for personal introspection, Vedic blueprints, and daily spiritual discovery.",
+        alt: "Pravaah | Soul Maps & Vedic Sanctuary",
       },
     ],
     locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pravaah | Soul Maps & Vedic Sanctuary",
+    description:
+      "A contemplative sanctuary for personal introspection, Vedic blueprints, and daily spiritual discovery.",
+    images: ["/OG.png"],
   },
 };
 
